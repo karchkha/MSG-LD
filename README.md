@@ -48,52 +48,111 @@ Please follow the instructions for data download and set up given here:
 
 https://github.com/gladia-research-group/multi-source-diffusion-models/blob/main/data/README.md
 
+# Pre-trained Components
+
+After data and conda environment are installed properly, you will need to download components of MusicLDM that are used for MSG-LD. Create the directory for checkpoints and download the required files:
+
+```bash
+# Create directory for MusicLDM checkpoints
+mkdir -p lightning_logs/musicldm_checkpoints
+
+# Download HiFiGAN vocoder checkpoint
+wget -O lightning_logs/musicldm_checkpoints/hifigan-ckpt.ckpt https://zenodo.org/record/10643148/files/hifigan-ckpt.ckpt
+
+# Download VAE checkpoint
+wget -O lightning_logs/musicldm_checkpoints/vae-ckpt.ckpt https://zenodo.org/record/10643148/files/vae-ckpt.ckpt
+```
+
 # Training MSG-LD
 
-After data and conda evn are intalled properlly, you will need to dowload components of MusicLDM that are used for MSG-LD too. For this please 
+After placing the checkpoints in the correct directory, you can start training MSG-LD:
 
-```
-# Download hifigan-ckpt.ckpt
-wget https://zenodo.org/record/10643148/files/hifigan-ckpt.ckpt
-
-# Download vae-ckpt.ckpt
-wget https://zenodo.org/record/10643148/files/vae-ckpt.ckpt
-
-```
-
-After placing this in some directory and changing corresponding links in the config file, for the trainion of MSG-LD please run:
-
-```
+```bash
 python train_musicldm.py --config config/MSG-LD/multichannel_musicldm_slakh_3d_train.yaml
 ```
-<!-- 
-# Checkpoints
 
-Plase download checkpoints from:
+# Pre-trained Model Checkpoints
+
+We provide two pre-trained model checkpoints on Zenodo:
+
+## Standard Model (for Separation and Total Generation)
+- **Model**: 128 channels, trained for ~72k steps
+- **Zenodo**: https://zenodo.org/records/15123184
+- **File**: `2024-05-23T09-28-56_3_D_4_stems_slakh_mix_cond_sumch_3e-05_zero_unconditional_checkpoint.pt`
+- **Used with**: `config/MSG-LD/multichannel_musicldm_slakh_3d_eval.yaml`
+
+```bash
+# Download standard model
+wget https://zenodo.org/records/15123184/files/2024-05-23T09-28-56_3_D_4_stems_slakh_mix_cond_sumch_3e-05_zero_unconditional_checkpoint.pt
 
 ```
-# For un-conditional:
-wget https://zenodo.org/records/13947715/files/2024-03-24T19-51-37_3_D_4_stems_slakh_uncond_ch%3D192_3e-05_.tar.gz?download=1
 
-# For conditional:
-wget https://zenodo.org/records/13947715/files/2024-03-25T00-55-31_3_D_4_stems_slakh_with_CALP_ch%3D192_3e-05_.tar.gz?download=1
-``` -->
+## Inpainting Model (for Arrangement Generation)
+- **Model**: 192 channels, trained for ~657k steps
+- **Zenodo**: https://zenodo.org/records/15123213
+- **File**: `2024-05-30T21-00-48_3_D_4_stems_slakh_mix_cond_sumch_ch_192_3e-05_zero_unconditional_checkpoint.pt`
+- **Used with**: `config/MSG-LD/multichannel_musicldm_slakh_3d_eval_inpaint.yaml`
+
+```bash
+# Download inpainting model
+wget https://zenodo.org/records/15123213/files/2024-05-30T21-00-48_3_D_4_stems_slakh_mix_cond_sumch_ch_192_3e-05_zero_unconditional_checkpoint.pt
+
+```
 
 # Inference
 
-For **separation** and **total generation**, use the following command. Adjust the `unconditional_guidance_scale` parameter as follows:
-- Set `unconditional_guidance_scale` to `0` for total generation in unconditional mode.
-- Set `unconditional_guidance_scale` to `1` or `2` for conditional generation, which performs separation.
+## Separation and Total Generation
+
+For **separation** and **total generation** tasks, use the standard model:
 
 ```bash
-# Separation and Total Generation:
 python train_musicldm.py --config config/MSG-LD/multichannel_musicldm_slakh_3d_eval.yaml
 ```
 
-For **arrangement generation**, run the command below and specify the instrument(s) you want to generate in the `stems_to_inpaint` parameter.
+Adjust the `unconditional_guidance_scale` parameter in the config file:
+- Set `unconditional_guidance_scale: 0` for **total generation** (unconditional mode)
+- Set `unconditional_guidance_scale: 1` or `2` for **separation** (conditional generation)
+
+## Arrangement Generation
+
+For **arrangement generation** (inpainting specific instruments), use the inpainting model:
 
 ```bash
-# Arrangement Generation:
 python train_musicldm.py --config config/MSG-LD/multichannel_musicldm_slakh_3d_eval_inpaint.yaml
 ```
+
+Specify the instrument(s) you want to generate in the `stems_to_inpaint` parameter in the config file. Available stems: `bass`, `drums`, `guitar`, `piano`.
+
+## Output Location
+
+Generated audio files will be saved in the lightning logs directory under your experiment folder. Look for outputs in:
+```
+lightning_logs/<project_name>/<timestamp>_<experiment_name>/
+```
+
+# Citation
+
+If you use this code in your research, please cite our paper:
+
+```bibtex
+@inproceedings{karchkhadze2025simultaneous,
+  title={Simultaneous Music Separation and Generation Using Multi-Track Latent Diffusion Models},
+  author={Karchkhadze, Tornike and Beguš, Gašper},
+  booktitle={ICASSP 2025-2025 IEEE International Conference on Acoustics, Speech and Signal Processing (ICASSP)},
+  year={2025},
+  organization={IEEE}
+}
+```
+
+# Acknowledgments
+
+This work builds upon [MusicLDM](https://github.com/RetroCirce/MusicLDM) and uses pre-trained VAE and HiFiGAN components from the MusicLDM project.
+
+# License
+
+Please refer to the LICENSE file for details on the terms of use.
+
+# Contact
+
+For questions or issues, please open an issue on the [GitHub repository](https://github.com/karchkha/MSG-LD) or contact the authors.
 
